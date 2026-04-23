@@ -12,7 +12,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"status":"UP"}`)
 		return
 	}
-	fmt.Fprint(w, "🚀 Hello from Go on OpenShift (Day 1 & 2)")
+	fmt.Fprint(w, "🚀 Hello from Go on OpenShift (Day 1 🤓)")
 }
 
 func main() {
