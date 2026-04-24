@@ -1,3 +1,3 @@
 module oc-learning
 
-go 1.25.9
+go 1.23
