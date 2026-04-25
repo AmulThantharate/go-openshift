@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: go-hello-pipeline
+spec:
+  params:
+    - name: repo-url
+      type: string
+    - name: app-name
+      type: string
+  tasks:
+    # 1. Clone repo
+    - name: clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: deleteExisting
+          value: "true"
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+
+    # 2. Build using OpenShift S2I
+    - name: build
+      runAfter: ["clone"]
+      taskRef:
+        name: openshift-client
+      params:
+        - name: SCRIPT
+          value: |
+            oc start-build $(params.app-name)
+
+    # 3. Deploy (restart)
+    - name: deploy
+      runAfter: ["build"]
+      taskRef:
+        name: openshift-client
+      params:
+        - name: SCRIPT
+          value: |
+            oc rollout restart deployment/$(params.app-name)
+
+    # 4. Health check
+    - name: test
+      runAfter: ["deploy"]
+      taskRef:
+        name: openshift-client
+      params:
+        - name: SCRIPT
+          value: |
+            sleep 10
+            ROUTE=$(oc get route $(params.app-name) -o jsonpath='{.spec.host}')
+            curl http://$ROUTE/health
