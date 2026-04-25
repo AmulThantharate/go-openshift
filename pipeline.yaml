@@ -8,21 +8,21 @@ spec:
       type: string
     - name: app-name
       type: string
+
+  workspaces:
+    - name: shared-workspace
+
   tasks:
-    # 1. Clone repo
     - name: clone
       taskRef:
         name: git-clone
       params:
         - name: url
           value: $(params.repo-url)
-        - name: deleteExisting
-          value: "true"
       workspaces:
         - name: output
           workspace: shared-workspace
 
-    # 2. Build using OpenShift S2I
     - name: build
       runAfter: ["clone"]
       taskRef:
@@ -30,9 +30,8 @@ spec:
       params:
         - name: SCRIPT
           value: |
-            oc start-build $(params.app-name)
+            oc start-build $(params.app-name) --wait
 
-    # 3. Deploy (restart)
     - name: deploy
       runAfter: ["build"]
       taskRef:
@@ -42,7 +41,6 @@ spec:
           value: |
             oc rollout restart deployment/$(params.app-name)
 
-    # 4. Health check
     - name: test
       runAfter: ["deploy"]
       taskRef:
