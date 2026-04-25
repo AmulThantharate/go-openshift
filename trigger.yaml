@@ -1,0 +1,50 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: go-hello-template
+spec:
+  params:
+    - name: repo-url
+    - name: app-name
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: go-hello-run-
+      spec:
+        pipelineRef:
+          name: go-hello-pipeline
+        params:
+          - name: repo-url
+            value: $(tt.params.repo-url)
+          - name: app-name
+            value: $(tt.params.app-name)
+        workspaces:
+          - name: shared-workspace
+            emptyDir: {}
+
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: go-hello-binding
+spec:
+  params:
+    - name: repo-url
+      value: $(body.repository.clone_url)
+    - name: app-name
+      value: go-hello
+
+---
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: go-hello-listener
+spec:
+  serviceAccountName: pipeline
+  triggers:
+    - name: go-hello-trigger
+      bindings:
+        - ref: go-hello-binding
+      template:
+        ref: go-hello-template
