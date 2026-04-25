@@ -12,7 +12,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"status":"UP"}`)
 		return
 	}
-	fmt.Fprint(w, "🔥 Pipeline update working!")
+	fmt.Fprint(w, "🔥 Pipeline update working! 1.2")
 }
 
 func main() {
